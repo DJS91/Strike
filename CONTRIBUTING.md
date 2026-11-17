@@ -200,6 +200,12 @@ One-time setup:
 2. Add the four printed values as repository secrets: `SIGNING_KEYSTORE_BASE64`,
    `SIGNING_STORE_PASSWORD`, `SIGNING_KEY_ALIAS` and `SIGNING_KEY_PASSWORD`.
 
+The workflow validates the decoded keystore and configured alias before running
+tests or building. If signing fails, check the **Validate signing keystore and
+alias** step first; it distinguishes an unreadable keystore from an alias mismatch
+without printing secret values. After changing the workflow, start a new run on
+the updated commit rather than rerunning an older workflow.
+
 Keep the signing key backed up outside the repository. The updater checks the
 APK checksum, package, signing key, version, Android requirement, and processor
 architecture before installation. A debug build cannot update to an APK signed

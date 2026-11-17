@@ -63,6 +63,33 @@ jobs:
           fi
           echo "$SIGNING_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
 
+      - name: Validate signing keystore and alias
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -z "$SIGNING_STORE_PASSWORD" ] || [ -z "$SIGNING_KEY_ALIAS" ] || [ -z "$SIGNING_KEY_PASSWORD" ]; then
+            echo "::error::Missing signing secrets. See CONTRIBUTING.md (Publishing a release)."
+            exit 1
+          fi
+          if ! keytool -list -keystore "$RUNNER_TEMP/release.jks" \
+            -storepass:env SIGNING_STORE_PASSWORD > /dev/null 2>&1; then
+            echo "::error::The decoded keystore cannot be opened with SIGNING_STORE_PASSWORD."
+            exit 1
+          fi
+          if ! keytool -list -keystore "$RUNNER_TEMP/release.jks" \
+            -storepass:env SIGNING_STORE_PASSWORD -alias "$SIGNING_KEY_ALIAS" > /dev/null 2>&1; then
+            if keytool -list -keystore "$RUNNER_TEMP/release.jks" \
+              -storepass:env SIGNING_STORE_PASSWORD -alias strike > /dev/null 2>&1; then
+              echo "::error::The keystore contains the script's default alias, but SIGNING_KEY_ALIAS does not select it. Check the secret for quotes, spaces or newlines."
+            else
+              echo "::error::Neither SIGNING_KEY_ALIAS nor the script's default alias exists in the decoded keystore. Verify that SIGNING_KEYSTORE_BASE64 came from the intended keystore."
+            fi
+            exit 1
+          fi
+          echo "The decoded keystore opens and contains the configured alias."
+
       - name: Test
         run: |
           chmod +x ./gradlew
