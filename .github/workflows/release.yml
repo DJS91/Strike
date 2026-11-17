@@ -56,24 +56,12 @@ jobs:
       - name: Decode release keystore
         env:
           SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
           if [ -z "$SIGNING_KEYSTORE_BASE64" ]; then
             echo "::error::Missing secret SIGNING_KEYSTORE_BASE64. See CONTRIBUTING.md (Publishing a release)."
             exit 1
           fi
-          if [ -z "$SIGNING_STORE_PASSWORD" ] || [ -z "$SIGNING_KEY_ALIAS" ] || [ -z "$SIGNING_KEY_PASSWORD" ]; then
-            echo "::error::Missing signing secrets. See CONTRIBUTING.md (Publishing a release)."
-            exit 1
-          fi
           echo "$SIGNING_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-          if ! keytool -list -keystore "$RUNNER_TEMP/release.jks" \
-              -storepass:env SIGNING_STORE_PASSWORD -alias "$SIGNING_KEY_ALIAS" > /dev/null 2>&1; then
-            echo "::error::Cannot find SIGNING_KEY_ALIAS in the release keystore or open the keystore. See CONTRIBUTING.md (Publishing a release)."
-            exit 1
-          fi
 
       - name: Validate signing keystore and alias
         env:
