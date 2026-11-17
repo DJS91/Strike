@@ -211,6 +211,15 @@ APK checksum, package, signing key, version, Android requirement, and processor
 architecture before installation. A debug build cannot update to an APK signed
 with a different key.
 
+If the release reports that the alias cannot be found, inspect the existing
+keystore locally with `keytool -list -v -keystore strike-release.jks` (enter
+the store password when prompted). Set the `SIGNING_KEY_ALIAS` repository
+secret to the alias of the existing release `PrivateKeyEntry`, and verify that
+`SIGNING_KEYSTORE_BASE64` and the passwords correspond to that same keystore
+and key. Retry the release after correcting the secrets. Do not generate a new
+key for an existing installation: APKs signed with a different key cannot
+update it.
+
 ## Reference code and reports
 
 [Overdrive](https://github.com/yash-srivastava/Overdrive-release) is a reference
